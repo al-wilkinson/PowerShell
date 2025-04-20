@@ -27,10 +27,16 @@ function Int_to_IPv4 {
     $octet4   
 }
 
-$ip = "100.251.244.254"
+$ip = "255.255.0.0"
 $ipInt = IPv4_to_Int -ip $ip
-Write-Host "Integer for '$ip' is: " $ipInt
+Write-Host "Integer for '$ip' is: " $ipInt 
+$calced = $ipInt % 16777216
+Write-Host "Mod by 16777216: " $calced
 # $ipInt.GetType()
 
 $reversedInt_to_IP = Int_to_IPv4 -ipInt $ipInt
 $reversedInt_to_IP
+
+$reversedInt_to_IP = Int_to_IPv4 -ipInt 327690
+$reversedInt_to_IP
+

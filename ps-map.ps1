@@ -29,6 +29,34 @@ function Test-Valid-CIDR {
     return $objIPAddress, $mask
 }
 
+function Get-Net-Address {
+    param (
+        [Parameter(Mandatory=$true)]
+        [int64]$IP_as_Int,
+        [int]$mask
+    )
+    
+    $prefixLength = $mask
+    $bitString = ('1' * $prefixLength).PadRight(32,'0')
+    Write-Host "The bitstring is: " $bitString
+
+    $ipString=[String]::Empty
+    # make 1 string combining a string for each byte and convert to int
+    for($i=0;$i -lt 32;$i+=8){
+        $byteString=$bitString.Substring($i,8)
+        $ipString+="$([Convert]::ToInt64($byteString, 2))"
+        if ($i -lt 24) {$ipString+="."} # Otherwise we get a trailing period.
+    }
+    
+    Write-Host "The mask is: " $ipString
+    $maskInt = [ipaddress]$ipString 
+    Write-Host "The mask integer is: " $maskInt.Address
+    
+    # $netInt = $IP_as_Int -band $maskInt.Address
+    $netInt
+    [ipaddress]$netInt    
+    
+}
 
 function Get-ValidHostAddresses {
     param(
@@ -39,6 +67,8 @@ function Get-ValidHostAddresses {
     $arrayIPRange = Test-Valid-CIDR -IpRange $IPRange
     $IP_as_Int = $arrayIPRange[0].Address
     $mask = $arrayIPRange[1]
+
+    Get-Net-Address -IP_as_Int $IP_as_Int -mask $mask
 
     Write-Host "The integer value for IP address: " $arrayIPRange[0] "is: " $IP_as_Int 
     Write-Host "The mask is: " $mask
@@ -51,17 +81,17 @@ function Get-ValidHostAddresses {
 
 # Example usage:
 $ipRange = "192.168.2.5/27"
+Write-Host "Values for $($ipRange):"
 $hostAddresses = Get-ValidHostAddresses -IpRange $ipRange
-Write-Host "Valid host addresses for $($ipRange):"
-$hostAddresses | ForEach-Object { Write-Host $_ }
+# $hostAddresses | ForEach-Object { Write-Host $_ }
 
 $ipRange2 = "10.0.5.53/8"
+Write-Host "Values for $($ipRange2):"
 $hostAddresses2 = Get-ValidHostAddresses -IpRange $ipRange2
-Write-Host "`nValid host addresses for $($ipRange2):"
-$hostAddresses2 | ForEach-Object { Write-Host $_ }
+# $hostAddresses2 | ForEach-Object { Write-Host $_ }
 
-$invalidRange = "192.168.321.32/31"
-Get-ValidHostAddresses -IpRange $invalidRange
+# $invalidRange = "192.168.321.32/31"
+# Get-ValidHostAddresses -IpRange $invalidRange
 
-$invalidFormat = "192.168.1.1"
-Get-ValidHostAddresses -IpRange $invalidFormat
+# $invalidFormat = "192.168.1.1"
+# Get-ValidHostAddresses -IpRange $invalidFormat

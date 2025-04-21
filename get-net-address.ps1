@@ -19,11 +19,11 @@ function Get-Net-Address {
     $maskInt = [ipaddress]$ipString
 
     # Some test values
-    $ip = "10.3.56.249"
+    $ip = "192.168.2.155"
     $ipInt = [ipaddress]$ip
     $netInt = $ipInt.Address -band $maskInt.Address
     $netInt
     [ipaddress]$netInt
 }
 
-Get-Net-Address -mask 25
+Get-Net-Address -mask 27

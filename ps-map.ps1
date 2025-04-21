@@ -38,7 +38,7 @@ function Get-Net-Address {
     
     $prefixLength = $mask
     $bitString = ('1' * $prefixLength).PadRight(32,'0')
-    Write-Host "The bitstring is: " $bitString
+    Write-Host "The mask bitstring is: " $bitString
 
     $ipString=[String]::Empty
     # make 1 string combining a string for each byte and convert to int
@@ -51,11 +51,13 @@ function Get-Net-Address {
     Write-Host "The mask is: " $ipString
     $maskInt = [ipaddress]$ipString 
     Write-Host "The mask integer is: " $maskInt.Address
+    Write-Host "The IP integer passed to the function is: "$IP_as_Int
     
-    # $netInt = $IP_as_Int -band $maskInt.Address
-    $netInt
-    [ipaddress]$netInt    
-    
+    $netInt = $IP_as_Int -band $maskInt.Address
+    Write-Host "The network address as integer is: " $netInt
+    $netAddr = [ipaddress]$netInt  
+    Write-Host "Which is: "  $netAddr
+   
 }
 
 function Get-ValidHostAddresses {
@@ -75,17 +77,21 @@ function Get-ValidHostAddresses {
 
     $totalAddresses = [Math]::Pow(2, (32 - $mask))
     Write-Host "The total number of addresses (including network and broadcast) is: " $totalAddresses
-    $networkAddressInt = ($IP_as_Int % 16777216)
-    Write-Host "The network address integer is: " $networkAddressInt
+    # $networkAddressInt = ($IP_as_Int % 16777216)
+    # Write-Host "The network address integer is: " $networkAddressInt
+    # $checkNetAddr = [ipaddress]$networkAddressInt
+    # Write-Host "Check Net Addr: " $checkNetAddr.IPAddressToString
 }
 
 # Example usage:
-$ipRange = "192.168.2.5/27"
+$ipRange = "192.168.2.155/26"
+Write-Host "-------------------------------------------------------------"
 Write-Host "Values for $($ipRange):"
 $hostAddresses = Get-ValidHostAddresses -IpRange $ipRange
 # $hostAddresses | ForEach-Object { Write-Host $_ }
 
-$ipRange2 = "10.0.5.53/8"
+$ipRange2 = "10.12.5.53/30"
+Write-Host "-------------------------------------------------------------"
 Write-Host "Values for $($ipRange2):"
 $hostAddresses2 = Get-ValidHostAddresses -IpRange $ipRange2
 # $hostAddresses2 | ForEach-Object { Write-Host $_ }

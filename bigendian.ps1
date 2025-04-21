@@ -20,18 +20,35 @@ function Int_to_IPv4 {
     $octet2 = (($ipInt%65536)-$octet1)/256
     $octet3 = (($ipInt%16777216)-$octet2*256-$octet1)/65536
     $octet4 = (($ipInt-$octet3*65536-$octet2*256-$octet1)/16777216)
+    
+    $strIP = [string]$octet4 + "." + [string]$octet3 + "." + [string]$octet2 + "." + [string]$octet1
+    return $strIP
+}
 
-    $octet1
-    $octet2
-    $octet3
-    $octet4   
+function get-hosts {
+    param (
+        [Parameter(Mandatory=$true)]
+        [int]$totalHosts
+    )
+
+    $bigendianIPInt = 167970046
+
+    for ($i = $bigendianIPInt + 1; $i -lt $bigendianIPInt + $totalHosts; $i++) {
+        Int_to_IPv4 -ipInt $i
+    }
 }
 
 $ip = "10.3.4.254"
 $ipInt = IPv4_to_Int -ip $ip
-Write-Host "Integer for '$ip' is: " $ipInt 
+Write-Host "Bigendian integer for '$ip' is: " $ipInt 
 
 $reversedInt_to_IP = Int_to_IPv4 -ipInt $ipInt
-$reversedInt_to_IP
+$strIP = $reversedInt_to_IP
+Write-Host "Reversed to check: " $strIP
+
+# Test incrementing
+$totalHosts = 10
+
+get-hosts -totalHosts $totalHosts
 
 

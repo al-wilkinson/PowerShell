@@ -90,7 +90,7 @@ Write-Host "Values for $($ipRange):"
 $hostAddresses = Get-ValidHostAddresses -IpRange $ipRange
 # $hostAddresses | ForEach-Object { Write-Host $_ }
 
-$ipRange2 = "10.12.5.53/30"
+$ipRange2 = "10.12.5.253/22"
 Write-Host "-------------------------------------------------------------"
 Write-Host "Values for $($ipRange2):"
 $hostAddresses2 = Get-ValidHostAddresses -IpRange $ipRange2

@@ -38,7 +38,7 @@ function Get-Net-Address {
     
     $prefixLength = $mask
     $bitString = ('1' * $prefixLength).PadRight(32,'0')
-    Write-Host "The mask bitstring is: " $bitString
+    Write-Host "function:Get-Net-Address - The mask bitstring is: " $bitString
 
     $ipString=[String]::Empty
     # make 1 string combining a string for each byte and convert to int
@@ -48,16 +48,18 @@ function Get-Net-Address {
         if ($i -lt 24) {$ipString+="."} # Otherwise we get a trailing period.
     }
     
-    Write-Host "The mask is: " $ipString
+    Write-Host "function:Get-Net-Address - The mask is: " $ipString
     $maskInt = [ipaddress]$ipString 
-    Write-Host "The mask integer is: " $maskInt.Address
-    Write-Host "The IP integer passed to the function is: "$IP_as_Int
+    Write-Host "function:Get-Net-Address - The mask integer is: " $maskInt.Address
+    Write-Host "function:Get-Net-Address - The IP integer passed to the function is: "$IP_as_Int
     
     $netInt = $IP_as_Int -band $maskInt.Address
-    Write-Host "The network address as integer is: " $netInt
+
+    Write-Host "function:Get-Net-Address - The network address as integer is: " $netInt
     $netAddr = [ipaddress]$netInt  
-    Write-Host "Which is: "  $netAddr
-   
+    Write-Host "function:Get-Net-Address - Which is: "  $netAddr
+
+    return $netInt   
 }
 
 function Get-ValidHostAddresses {
@@ -66,21 +68,22 @@ function Get-ValidHostAddresses {
         [string]$IPRange
     )
 
+    # Test for valid input string and split CIDR notation into an array of littleendian address integer and subnet mask
     $arrayIPRange = Test-Valid-CIDR -IpRange $IPRange
     $IP_as_Int = $arrayIPRange[0].Address
     $mask = $arrayIPRange[1]
 
-    Get-Net-Address -IP_as_Int $IP_as_Int -mask $mask
+    # Get the network address for the given IP address and subnet mask
+    $netInt = Get-Net-Address -IP_as_Int $IP_as_Int -mask $mask
+    Write-Host "function:Get-ValidHostAddresses - The network address as integer is: " $netInt
+    $netAddr = [ipaddress]$netInt  
+    Write-Host "function:Get-ValidHostAddresses - Which is: "  $netAddr
 
-    Write-Host "The integer value for IP address: " $arrayIPRange[0] "is: " $IP_as_Int 
-    Write-Host "The mask is: " $mask
+    Write-Host "function:Get-ValidHostAddresses - The integer value for IP address: " $arrayIPRange[0] "is: " $IP_as_Int 
+    Write-Host "function:Get-ValidHostAddresses - The mask is: " $mask
 
     $totalAddresses = [Math]::Pow(2, (32 - $mask))
-    Write-Host "The total number of addresses (including network and broadcast) is: " $totalAddresses
-    # $networkAddressInt = ($IP_as_Int % 16777216)
-    # Write-Host "The network address integer is: " $networkAddressInt
-    # $checkNetAddr = [ipaddress]$networkAddressInt
-    # Write-Host "Check Net Addr: " $checkNetAddr.IPAddressToString
+    Write-Host "function:Get-ValidHostAddresses - The total number of addresses (including network and broadcast) is: " $totalAddresses
 }
 
 # Example usage:

@@ -46,20 +46,77 @@ function Get-Net-Address {
         $byteString=$bitString.Substring($i,8)
         $ipString+="$([Convert]::ToInt64($byteString, 2))"
         if ($i -lt 24) {$ipString+="."} # Otherwise we get a trailing period.
-    }
+    } 
     
     Write-Host "function:Get-Net-Address - The mask is: " $ipString
     $maskInt = [ipaddress]$ipString 
     Write-Host "function:Get-Net-Address - The mask integer is: " $maskInt.Address
     Write-Host "function:Get-Net-Address - The IP integer passed to the function is: "$IP_as_Int
     
+    # Now we have the mask and IP address as integers we can binary AND them to get the network address
     $netInt = $IP_as_Int -band $maskInt.Address
 
-    Write-Host "function:Get-Net-Address - The network address as integer is: " $netInt
-    $netAddr = [ipaddress]$netInt  
-    Write-Host "function:Get-Net-Address - Which is: "  $netAddr
+    # Write-Host "function:Get-Net-Address - The network address as integer is: " $netInt
+    # $netAddr = [ipaddress]$netInt  
+    # Write-Host "function:Get-Net-Address - Which is: "  $netAddr
 
     return $netInt   
+}
+
+
+function get-bigendian {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$netAddr
+    )
+
+    $octets = $netAddr.Split(".") | ForEach-Object {[int64]$_}
+
+    $bigendianNetIPInt = ($octets[0] * 16777216) + ($octets[1] * 65536) + ($octets[2] * 256) + $octets[3]
+    return $bigendianNetIPInt  
+
+
+}
+
+function bigendianIPv4_to_Int {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$ip
+    )
+
+    $octets = $ip.Split(".") | ForEach-Object {[int64]$_}
+    
+    $ipInt = ($octets[0] * 16777216) + ($octets[1] * 65536) + ($octets[2] * 256) + $octets[3]
+    return $ipInt
+}
+
+function Int_to_IPv4 {
+    param (
+        [Parameter(Mandatory=$true)]
+        [int64]$ipInt
+    )
+
+    $octet1 = $ipInt%256
+    $octet2 = (($ipInt%65536)-$octet1)/256
+    $octet3 = (($ipInt%16777216)-$octet2*256-$octet1)/65536
+    $octet4 = (($ipInt-$octet3*65536-$octet2*256-$octet1)/16777216)
+    
+    $strIP = [string]$octet4 + "." + [string]$octet3 + "." + [string]$octet2 + "." + [string]$octet1
+    Write-Host "function:bigendianInt_to_IPv4 - address string: "  $strIP
+    # return $strIP
+}
+
+function Get-Hosts {
+    param (
+        [Parameter(Mandatory=$true)]
+        [int64]$totalHosts,
+        [int64]$bigendianNetIPInt
+    )
+
+    for ($i = $bigendianNetIPInt + 1; $i -lt $bigendianNetIPInt + $totalHosts; $i++) {
+        Int_to_IPv4 -ipInt $i
+        # Write-Host "function:Get-Hosts - integer value: " $i
+    }
 }
 
 function Get-ValidHostAddresses {
@@ -84,16 +141,26 @@ function Get-ValidHostAddresses {
 
     $totalAddresses = [Math]::Pow(2, (32 - $mask))
     Write-Host "function:Get-ValidHostAddresses - The total number of addresses (including network and broadcast) is: " $totalAddresses
+    $bigendianNetIPInt = get-bigendian -netAddr $netAddr
+    Write-Host "function:Get-ValidHostAddresses - The bigendian network integer is: " $bigendianNetIPInt
+
+    Get-Hosts -totalHosts $totalAddresses -bigendianNetIPInt $bigendianNetIPInt
 }
 
+$ipRange = $args[0]
+Write-Host "-------------------------------------------------------------"
+Write-Host "Values for $($ipRange):"
+Get-ValidHostAddresses -IpRange $ipRange
+
 # Example usage:
-$ipRange = "192.168.2.155/26"
+<#
+$ipRange = "192.168.2.155/27"
 Write-Host "-------------------------------------------------------------"
 Write-Host "Values for $($ipRange):"
 $hostAddresses = Get-ValidHostAddresses -IpRange $ipRange
 # $hostAddresses | ForEach-Object { Write-Host $_ }
 
-$ipRange2 = "10.12.5.253/22"
+$ipRange2 = "10.12.5.253/28"
 Write-Host "-------------------------------------------------------------"
 Write-Host "Values for $($ipRange2):"
 $hostAddresses2 = Get-ValidHostAddresses -IpRange $ipRange2
@@ -104,3 +171,4 @@ $hostAddresses2 = Get-ValidHostAddresses -IpRange $ipRange2
 
 # $invalidFormat = "192.168.1.1"
 # Get-ValidHostAddresses -IpRange $invalidFormat
+#>

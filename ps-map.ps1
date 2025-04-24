@@ -1,3 +1,4 @@
+# Function to test for valid input and split the input into an array of two elements.
 function Test-Valid-CIDR {
     param(
         [Parameter(Mandatory=$true)]
@@ -29,6 +30,7 @@ function Test-Valid-CIDR {
     return $objIPAddress, $mask
 }
 
+# Function to calculate the network address as a little endian integer using a binary AND of the entered IP address and mask.
 function Get-Net-Address {
     param (
         [Parameter(Mandatory=$true)]
@@ -63,7 +65,6 @@ function Get-Net-Address {
     return $netInt   
 }
 
-
 function get-bigendian {
     param (
         [Parameter(Mandatory=$true)]
@@ -78,6 +79,7 @@ function get-bigendian {
 
 }
 
+
 function bigendianIPv4_to_Int {
     param (
         [Parameter(Mandatory=$true)]
@@ -90,7 +92,7 @@ function bigendianIPv4_to_Int {
     return $ipInt
 }
 
-function Int_to_IPv4 {
+function bigendianInt_to_IPv4 {
     param (
         [Parameter(Mandatory=$true)]
         [int64]$ipInt
@@ -113,10 +115,13 @@ function Get-Hosts {
         [int64]$bigendianNetIPInt
     )
 
+    $arrayIPAddresses = @()
     for ($i = $bigendianNetIPInt + 1; $i -lt $bigendianNetIPInt + $totalHosts; $i++) {
-        Int_to_IPv4 -ipInt $i
-        # Write-Host "function:Get-Hosts - integer value: " $i
+        $ip = bigendianInt_to_IPv4 -ipInt $i
+        $arrayIPAddresses += $ip
     }
+
+    Write-Host "function:Get-Hosts - IP array : " $arrayIPAddresses
 }
 
 function Get-ValidHostAddresses {
@@ -133,14 +138,15 @@ function Get-ValidHostAddresses {
     # Get the network address for the given IP address and subnet mask
     $netInt = Get-Net-Address -IP_as_Int $IP_as_Int -mask $mask
     Write-Host "function:Get-ValidHostAddresses - The network address as integer is: " $netInt
+    # Use the PowerShell [IPAddress] class to check returned value.
     $netAddr = [ipaddress]$netInt  
     Write-Host "function:Get-ValidHostAddresses - Which is: "  $netAddr
-
     Write-Host "function:Get-ValidHostAddresses - The integer value for IP address: " $arrayIPRange[0] "is: " $IP_as_Int 
     Write-Host "function:Get-ValidHostAddresses - The mask is: " $mask
 
     $totalAddresses = [Math]::Pow(2, (32 - $mask))
     Write-Host "function:Get-ValidHostAddresses - The total number of addresses (including network and broadcast) is: " $totalAddresses
+    # It is much easier to calculate the valid IP addresses in the range in bigendian format.  Should this be some elegant bit manipulation of the integer?
     $bigendianNetIPInt = get-bigendian -netAddr $netAddr
     Write-Host "function:Get-ValidHostAddresses - The bigendian network integer is: " $bigendianNetIPInt
 
@@ -151,24 +157,3 @@ $ipRange = $args[0]
 Write-Host "-------------------------------------------------------------"
 Write-Host "Values for $($ipRange):"
 Get-ValidHostAddresses -IpRange $ipRange
-
-# Example usage:
-<#
-$ipRange = "192.168.2.155/27"
-Write-Host "-------------------------------------------------------------"
-Write-Host "Values for $($ipRange):"
-$hostAddresses = Get-ValidHostAddresses -IpRange $ipRange
-# $hostAddresses | ForEach-Object { Write-Host $_ }
-
-$ipRange2 = "10.12.5.253/28"
-Write-Host "-------------------------------------------------------------"
-Write-Host "Values for $($ipRange2):"
-$hostAddresses2 = Get-ValidHostAddresses -IpRange $ipRange2
-# $hostAddresses2 | ForEach-Object { Write-Host $_ }
-
-# $invalidRange = "192.168.321.32/31"
-# Get-ValidHostAddresses -IpRange $invalidRange
-
-# $invalidFormat = "192.168.1.1"
-# Get-ValidHostAddresses -IpRange $invalidFormat
-#>

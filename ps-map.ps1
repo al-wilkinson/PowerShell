@@ -104,8 +104,8 @@ function bigendianInt_to_IPv4 {
     $octet4 = (($ipInt-$octet3*65536-$octet2*256-$octet1)/16777216)
     
     $strIP = [string]$octet4 + "." + [string]$octet3 + "." + [string]$octet2 + "." + [string]$octet1
-    Write-Host "function:bigendianInt_to_IPv4 - address string: "  $strIP
-    # return $strIP
+    # Write-Host "function:bigendianInt_to_IPv4 - address string: "  $strIP
+    return $strIP
 }
 
 function Get-Hosts {
@@ -121,7 +121,8 @@ function Get-Hosts {
         $arrayIPAddresses += $ip
     }
 
-    Write-Host "function:Get-Hosts - IP array : " $arrayIPAddresses
+    # Write-Host "function:Get-Hosts - IP array : " $arrayIPAddresses
+    return $arrayIPAddresses
 }
 
 function Get-ValidHostAddresses {
@@ -150,7 +151,11 @@ function Get-ValidHostAddresses {
     $bigendianNetIPInt = get-bigendian -netAddr $netAddr
     Write-Host "function:Get-ValidHostAddresses - The bigendian network integer is: " $bigendianNetIPInt
 
-    Get-Hosts -totalHosts $totalAddresses -bigendianNetIPInt $bigendianNetIPInt
+    $arrayIPAddresses = Get-Hosts -totalHosts $totalAddresses -bigendianNetIPInt $bigendianNetIPInt
+    Write-Host "function:Get-ValidHostAddresses - IP array : " $arrayIPAddresses
+    ForEach ($ip in $arrayIPAddresses) {
+        Test-Connection -ComputerName $ip -Count 2
+    }
 }
 
 $ipRange = $args[0]
